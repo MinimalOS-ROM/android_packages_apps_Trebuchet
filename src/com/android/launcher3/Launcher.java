@@ -1251,20 +1251,25 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
         setupInkosFavorites();
     }
 
-    private void setupInkosFavorites() {
+    public void setupInkosFavorites() {
         android.widget.LinearLayout list = findViewById(R.id.inkos_favorites);
         if (list == null) return;
         list.removeAllViews();
-        String[][] items = {
-            {"Phone", "com.android.dialer"},
-            {"Messages", "com.android.messaging"},
-            {"Contacts", "com.android.contacts"},
-            {"Camera", "org.lineageos.snap"},
-            {"Settings", "com.android.settings"},
-            {"All Apps", "__ALL_APPS__"}
-        };
-        for (String[] item : items) {
+        android.content.SharedPreferences prefs = getSharedPreferences("inkos_prefs", MODE_PRIVATE);
+        String saved = prefs.getString("favorites",
+                "Phone|com.android.dialer;Messages|com.android.messaging;Contacts|com.android.contacts;Camera|org.lineageos.snap;Settings|com.android.settings");
+        java.util.List<String[]> items = new java.util.ArrayList<>();
+        if (!saved.isEmpty()) {
+            for (String entry : saved.split(";")) {
+                String[] parts = entry.split("\\|", 2);
+                if (parts.length == 2) items.add(parts);
+            }
+        }
+        items.add(new String[]{"All Apps", "__ALL_APPS__"});
+        for (int i = 0; i < items.size(); i++) {
+            final String[] item = items.get(i);
             android.widget.TextView tv = new android.widget.TextView(this);
+            tv.setTag(item[1]);
             tv.setText(item[0]);
             tv.setTextSize(20);
             tv.setTextColor(android.graphics.Color.WHITE);
@@ -1277,7 +1282,7 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
             });
             tv.setOnClickListener(v -> {
                 if ("__ALL_APPS__".equals(item[1])) {
-                    getStateManager().goToState(LauncherState.ALL_APPS);
+                    getStateManager().goToState(LauncherState.ALL_APPS, false);
                 } else {
                     android.content.Intent launch = getPackageManager().getLaunchIntentForPackage(item[1]);
                     if (launch != null) {
@@ -1285,8 +1290,58 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
                     }
                 }
             });
+            tv.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() == android.view.KeyEvent.ACTION_DOWN
+                        && keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+                        && !"__ALL_APPS__".equals(item[1])) {
+                    new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle(item[0])
+                            .setItems(new String[]{"Remove from Home", "App Info"}, (d, which) -> {
+                                if (which == 0) {
+                                    removeFromInkosHome(item[1]);
+                                } else {
+                                    android.content.Intent info = new android.content.Intent(
+                                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            android.net.Uri.parse("package:" + item[1]));
+                                    startActivity(info);
+                                }
+                            }).show();
+                    return true;
+                }
+                return false;
+            });
             list.addView(tv);
         }
+        if (list.getChildCount() > 0) {
+            list.getChildAt(0).requestFocus();
+        }
+    }
+
+    public void pinToInkosHome(String label, String pkg) {
+        android.content.SharedPreferences prefs = getSharedPreferences("inkos_prefs", MODE_PRIVATE);
+        String saved = prefs.getString("favorites",
+                "Phone|com.android.dialer;Messages|com.android.messaging;Contacts|com.android.contacts;Camera|org.lineageos.snap;Settings|com.android.settings");
+        String entry = label + "|" + pkg;
+        if (!saved.contains("|" + pkg)) {
+            saved = saved.isEmpty() ? entry : saved + ";" + entry;
+            prefs.edit().putString("favorites", saved).apply();
+            setupInkosFavorites();
+        }
+    }
+
+    public void removeFromInkosHome(String pkg) {
+        android.content.SharedPreferences prefs = getSharedPreferences("inkos_prefs", MODE_PRIVATE);
+        String saved = prefs.getString("favorites",
+                "Phone|com.android.dialer;Messages|com.android.messaging;Contacts|com.android.contacts;Camera|org.lineageos.snap;Settings|com.android.settings");
+        StringBuilder sb = new StringBuilder();
+        for (String entry : saved.split(";")) {
+            if (!entry.endsWith("|" + pkg) && !entry.isEmpty()) {
+                if (sb.length() > 0) sb.append(";");
+                sb.append(entry);
+            }
+        }
+        prefs.edit().putString("favorites", sb.toString()).apply();
+        setupInkosFavorites();
     }
 
     /**
@@ -1997,6 +2052,48 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         TestLogging.recordKeyEvent(TestProtocol.SEQUENCE_MAIN, "Key event", event);
+        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            View focused = getCurrentFocus();
+            if (focused instanceof BubbleTextView) {
+                Object tag = focused.getTag();
+                if (tag instanceof ItemInfo) {
+                    ItemInfo info = (ItemInfo) tag;
+                    android.content.ComponentName cn = info.getTargetComponent();
+                    String pkg = cn != null ? cn.getPackageName() : null;
+                    String label = ((BubbleTextView) focused).getText() != null
+                            ? ((BubbleTextView) focused).getText().toString() : "";
+                    if (pkg != null) {
+                        new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                                .setTitle(label)
+                                .setItems(new String[]{"Pin to Home", "App Info"}, (d, which) -> {
+                                    if (which == 0) {
+                                        pinToInkosHome(label, pkg);
+                                    } else {
+                                        startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                                android.net.Uri.parse("package:" + pkg)));
+                                    }
+                                }).show();
+                        return true;
+                    }
+                }
+            } else if (focused instanceof android.widget.TextView && focused.getTag() instanceof String) {
+                String pkg = (String) focused.getTag();
+                String label = ((android.widget.TextView) focused).getText().toString();
+                if (!"__ALL_APPS__".equals(pkg)) {
+                    new android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle(label)
+                            .setItems(new String[]{"Remove from Home", "App Info"}, (d, which) -> {
+                                if (which == 0) {
+                                    removeFromInkosHome(pkg);
+                                } else {
+                                    startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            android.net.Uri.parse("package:" + pkg)));
+                                }
+                            }).show();
+                    return true;
+                }
+            }
+        }
         return (event.getKeyCode() == KeyEvent.KEYCODE_HOME) || super.dispatchKeyEvent(event);
     }
 

@@ -250,6 +250,36 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        if (mDisplay == DISPLAY_ALL_APPS && keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) {
+            Object tag = getTag();
+            if (tag instanceof com.android.launcher3.model.data.ItemInfo) {
+                com.android.launcher3.model.data.ItemInfo info = (com.android.launcher3.model.data.ItemInfo) tag;
+                android.content.ComponentName cn = info.getTargetComponent();
+                String pkg = cn != null ? cn.getPackageName() : null;
+                String label = getText() != null ? getText().toString() : "";
+                if (pkg != null && getContext() instanceof Launcher) {
+                    Launcher launcher = (Launcher) getContext();
+                    new android.app.AlertDialog.Builder(launcher, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle(label)
+                            .setItems(new String[]{"Pin to Home", "App Info"}, (d, which) -> {
+                                if (which == 0) {
+                                    launcher.pinToInkosHome(label, pkg);
+                                } else {
+                                    android.content.Intent i = new android.content.Intent(
+                                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            android.net.Uri.parse("package:" + pkg));
+                                    launcher.startActivity(i);
+                                }
+                            }).show();
+                    return true;
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
     protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
         // Disable marques when not focused to that, so that updating text does not cause relayout.
         setEllipsize(focused ? TruncateAt.MARQUEE : TruncateAt.END);
@@ -859,6 +889,31 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             setMinHeight(0);
             setMinimumHeight(0);
             setPadding(48, 20, 48, 20);
+            setFocusable(true);
+            setOnLongClickListener(v -> {
+                Object tag = getTag();
+                if (tag instanceof com.android.launcher3.model.data.ItemInfo && getContext() instanceof Launcher) {
+                    com.android.launcher3.model.data.ItemInfo info = (com.android.launcher3.model.data.ItemInfo) tag;
+                    android.content.ComponentName cn = info.getTargetComponent();
+                    String pkg = cn != null ? cn.getPackageName() : null;
+                    String label = getText() != null ? getText().toString() : "";
+                    if (pkg != null) {
+                        Launcher launcher = (Launcher) getContext();
+                        new android.app.AlertDialog.Builder(launcher, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                                .setTitle(label)
+                                .setItems(new String[]{"Pin to Home", "App Info"}, (d, which) -> {
+                                    if (which == 0) {
+                                        launcher.pinToInkosHome(label, pkg);
+                                    } else {
+                                        launcher.startActivity(new android.content.Intent(
+                                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                                android.net.Uri.parse("package:" + pkg)));
+                                    }
+                                }).show();
+                    }
+                }
+                return true;
+            });
         }
         mIcon = icon;
         if (mIcon != null) {
