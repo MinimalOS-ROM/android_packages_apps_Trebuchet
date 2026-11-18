@@ -29,4 +29,45 @@
         android:id="@+id/overview_actions_view"
         layout="@layout/overview_actions_container" />
 
+    <LinearLayout
+        android:id="@+id/minimal_recents_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#FF000000"
+        android:padding="20dp"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/minimal_recents_ram"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RECENT APPS"
+            android:textColor="#FF888888"
+            android:textSize="12sp"
+            android:letterSpacing="0.08"
+            android:paddingBottom="10dp" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+            <LinearLayout
+                android:id="@+id/minimal_recents_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+        <TextView
+            android:id="@+id/minimal_recents_clear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CLEAR ALL"
+            android:gravity="center"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:letterSpacing="0.08"
+            android:padding="12dp"
+            android:focusable="true"
+            android:clickable="true" />
+    </LinearLayout>
+
 </merge>

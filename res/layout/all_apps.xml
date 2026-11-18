@@ -20,6 +20,7 @@
     android:theme="?attr/allAppsTheme"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FF000000"
     android:clipChildren="true"
     android:clipToPadding="false"
     android:focusable="false"
@@ -45,7 +46,7 @@
 
     </com.android.launcher3.allapps.FloatingHeaderView>
 
-    <include layout="@layout/search_container_all_apps" />
+    <include layout="@layout/search_container_all_apps" android:visibility="gone" />
 
-    <include layout="@layout/all_apps_fast_scroller" />
+    <include layout="@layout/all_apps_fast_scroller" android:visibility="gone" />
 </com.android.launcher3.allapps.LauncherAllAppsContainerView>

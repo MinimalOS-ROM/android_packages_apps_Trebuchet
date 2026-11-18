@@ -253,6 +253,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
         // Disable marques when not focused to that, so that updating text does not cause relayout.
         setEllipsize(focused ? TruncateAt.MARQUEE : TruncateAt.END);
+        setBackgroundColor(focused ? Color.WHITE : Color.TRANSPARENT);
+        setTextColor(focused ? Color.BLACK : Color.WHITE);
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
     }
 
@@ -635,6 +637,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (mDisplay == DISPLAY_ALL_APPS) {
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(80, MeasureSpec.EXACTLY);
+        }
         if (mCenterVertically) {
             Paint.FontMetrics fm = getPaint().getFontMetrics();
             int cellHeightPx = mIconSize + getCompoundDrawablePadding() +
@@ -845,8 +850,15 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      * Sets the icon for this view based on the layout direction.
      */
     protected void setIcon(FastBitmapDrawable icon) {
-        if (mIsIconVisible) {
-            applyCompoundDrawables(icon);
+        // InkOS-style minimal text-only items
+        setCompoundDrawables(null, null, null, null);
+        if (mDisplay == DISPLAY_ALL_APPS) {
+            setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.START);
+            setTextColor(Color.WHITE);
+            setTextSize(18);
+            setMinHeight(0);
+            setMinimumHeight(0);
+            setPadding(48, 20, 48, 20);
         }
         mIcon = icon;
         if (mIcon != null) {

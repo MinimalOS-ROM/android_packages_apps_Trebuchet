@@ -543,6 +543,10 @@ public class TaskView extends FrameLayout implements Reusable {
      *   that issue is fixed
      */
     public void bind(Task task, RecentsOrientedState orientedState) {
+        android.widget.TextView titleLabel = findViewById(R.id.task_title_label);
+        if (titleLabel != null && task != null) {
+            titleLabel.setText(TaskUtils.getTitle(getContext(), task));
+        }
         cancelPendingLoadTasks();
         mTask = task;
         mTaskIdContainer[0] = mTask.key.id;
@@ -581,7 +585,7 @@ public class TaskView extends FrameLayout implements Reusable {
         if (mTask != null && thumbnailDatas != null) {
             final ThumbnailData thumbnailData = thumbnailDatas.get(mTask.key.id);
             if (thumbnailData != null) {
-                mSnapshotView.setThumbnail(mTask, thumbnailData);
+                mSnapshotView.setThumbnail(mTask, null);
                 return;
             }
         }
@@ -786,7 +790,7 @@ public class TaskView extends FrameLayout implements Reusable {
             if (needsUpdate(changes, FLAG_UPDATE_THUMBNAIL)) {
                 mThumbnailLoadRequest = thumbnailCache.updateThumbnailInBackground(
                         mTask, thumbnail -> {
-                            mSnapshotView.setThumbnail(mTask, thumbnail);
+                            mSnapshotView.setThumbnail(mTask, null);
                         });
             }
             if (needsUpdate(changes, FLAG_UPDATE_ICON)) {

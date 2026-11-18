@@ -97,7 +97,7 @@ public class AllAppsRecyclerView extends BaseRecyclerView {
         Resources res = getResources();
         mEmptySearchBackgroundTopOffset = res.getDimensionPixelSize(
                 R.dimen.all_apps_empty_search_bg_top_offset);
-        mNumAppsPerRow = LauncherAppState.getIDP(context).numColumns;
+        mNumAppsPerRow = 1;
         mFastScrollHelper = new AllAppsFastScrollHelper(this);
     }
 

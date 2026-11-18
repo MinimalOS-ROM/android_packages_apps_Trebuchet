@@ -1357,7 +1357,80 @@ public abstract class RecentsView<ACTIVITY_TYPE extends StatefulActivity<STATE_T
         updateGridProperties();
     }
 
+    private void updateMinimalRecentsList(ArrayList<GroupTask> taskGroups) {
+        setFocusable(false);
+        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+        if (!(getParent() instanceof android.view.ViewGroup)) return;
+        android.view.ViewGroup parent = (android.view.ViewGroup) getParent();
+        android.widget.LinearLayout list = parent.findViewById(R.id.minimal_recents_list);
+        android.widget.TextView clearBtn = parent.findViewById(R.id.minimal_recents_clear);
+        android.widget.TextView ramTv = parent.findViewById(R.id.minimal_recents_ram);
+        if (ramTv != null) {
+            android.app.ActivityManager am = (android.app.ActivityManager) getContext().getSystemService(android.content.Context.ACTIVITY_SERVICE);
+            android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+            if (am != null) {
+                am.getMemoryInfo(mi);
+                long usedMb = (mi.totalMem - mi.availMem) / (1024 * 1024);
+                long totalMb = mi.totalMem / (1024 * 1024);
+                ramTv.setText("RECENT APPS  •  RAM " + usedMb + " / " + totalMb + " MB");
+            }
+        }
+        if (list == null) return;
+        list.removeAllViews();
+        if (clearBtn != null) {
+            clearBtn.setOnFocusChangeListener((v, hasFocus) -> {
+                clearBtn.setBackgroundColor(hasFocus ? android.graphics.Color.WHITE : android.graphics.Color.BLACK);
+                clearBtn.setTextColor(hasFocus ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+            });
+            clearBtn.setOnClickListener(v -> dismissAllTasks(v));
+        }
+        if (taskGroups == null) return;
+        for (GroupTask group : taskGroups) {
+            if (group == null || group.task1 == null) continue;
+            final Task task = group.task1;
+            android.widget.TextView tv = new android.widget.TextView(getContext());
+            tv.setText(com.android.quickstep.TaskUtils.getTitle(getContext(), task));
+            tv.setTextSize(18);
+            tv.setTextColor(android.graphics.Color.WHITE);
+            tv.setPadding(24, 20, 24, 20);
+            tv.setFocusable(true);
+            tv.setClickable(true);
+            android.graphics.drawable.GradientDrawable border = new android.graphics.drawable.GradientDrawable();
+            border.setColor(android.graphics.Color.BLACK);
+            border.setStroke(2, android.graphics.Color.WHITE);
+            tv.setBackground(border);
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.bottomMargin = 16;
+            tv.setLayoutParams(lp);
+            tv.setOnFocusChangeListener((v, hasFocus) -> {
+                border.setColor(hasFocus ? android.graphics.Color.WHITE : android.graphics.Color.BLACK);
+                tv.setTextColor(hasFocus ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+            });
+            tv.setOnClickListener(v -> {
+                com.android.systemui.shared.system.ActivityManagerWrapper.getInstance()
+                        .startActivityFromRecentsAsync(task.key, null, null, null);
+            });
+            final int idx = list.getChildCount();
+            tv.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return false;
+                if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN) {
+                    android.view.View next = (idx + 1 < list.getChildCount()) ? list.getChildAt(idx + 1) : clearBtn;
+                    if (next != null) next.requestFocus();
+                    return true;
+                } else if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_UP && idx > 0) {
+                    list.getChildAt(idx - 1).requestFocus();
+                    return true;
+                }
+                return false;
+            });
+            list.addView(tv);
+        }
+    }
+
     protected void applyLoadPlan(ArrayList<GroupTask> taskGroups) {
+        updateMinimalRecentsList(taskGroups);
         if (mPendingAnimation != null) {
             mPendingAnimation.addEndListener(success -> applyLoadPlan(taskGroups));
             return;
@@ -3534,6 +3607,19 @@ public abstract class RecentsView<ACTIVITY_TYPE extends StatefulActivity<STATE_T
     @Override
     public void setVisibility(int visibility) {
         super.setVisibility(visibility);
+        if (getParent() instanceof android.view.ViewGroup) {
+            android.view.View container = ((android.view.ViewGroup) getParent()).findViewById(R.id.minimal_recents_container);
+            if (container != null) {
+                container.setVisibility(visibility == VISIBLE ? VISIBLE : GONE);
+                if (visibility == VISIBLE) {
+                    container.bringToFront();
+                    android.widget.LinearLayout list = container.findViewById(R.id.minimal_recents_list);
+                    if (list != null && list.getChildCount() > 0) {
+                        list.getChildAt(0).requestFocus();
+                    }
+                }
+            }
+        }
         if (mActionsView != null) {
             mActionsView.updateHiddenFlags(HIDDEN_NO_RECENTS, visibility != VISIBLE);
             if (visibility != VISIBLE) {

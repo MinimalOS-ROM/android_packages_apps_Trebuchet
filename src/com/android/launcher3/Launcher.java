@@ -1248,6 +1248,45 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
         // Setup the drag controller (drop targets have to be added in reverse order in priority)
         mDropTargetBar.setup(mDragController);
         mAllAppsController.setupViews(mScrimView, mAppsView);
+        setupInkosFavorites();
+    }
+
+    private void setupInkosFavorites() {
+        android.widget.LinearLayout list = findViewById(R.id.inkos_favorites);
+        if (list == null) return;
+        list.removeAllViews();
+        String[][] items = {
+            {"Phone", "com.android.dialer"},
+            {"Messages", "com.android.messaging"},
+            {"Contacts", "com.android.contacts"},
+            {"Camera", "org.lineageos.snap"},
+            {"Settings", "com.android.settings"},
+            {"All Apps", "__ALL_APPS__"}
+        };
+        for (String[] item : items) {
+            android.widget.TextView tv = new android.widget.TextView(this);
+            tv.setText(item[0]);
+            tv.setTextSize(20);
+            tv.setTextColor(android.graphics.Color.WHITE);
+            tv.setPadding(16, 14, 16, 14);
+            tv.setFocusable(true);
+            tv.setClickable(true);
+            tv.setOnFocusChangeListener((v, hasFocus) -> {
+                tv.setBackgroundColor(hasFocus ? android.graphics.Color.WHITE : android.graphics.Color.TRANSPARENT);
+                tv.setTextColor(hasFocus ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+            });
+            tv.setOnClickListener(v -> {
+                if ("__ALL_APPS__".equals(item[1])) {
+                    getStateManager().goToState(LauncherState.ALL_APPS);
+                } else {
+                    android.content.Intent launch = getPackageManager().getLaunchIntentForPackage(item[1]);
+                    if (launch != null) {
+                        startActivity(launch);
+                    }
+                }
+            });
+            list.addView(tv);
+        }
     }
 
     /**

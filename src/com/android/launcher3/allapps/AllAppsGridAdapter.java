@@ -295,7 +295,7 @@ public class AllAppsGridAdapter extends
     }
 
     public void setAppsPerRow(int appsPerRow) {
-        mAppsPerRow = appsPerRow;
+        mAppsPerRow = 1;
         int totalSpans = mAppsPerRow;
         for (BaseAdapterProvider adapterProvider : mAdapterProviders) {
             for (int itemPerRow : adapterProvider.getSupportedItemsPerRowArray()) {
