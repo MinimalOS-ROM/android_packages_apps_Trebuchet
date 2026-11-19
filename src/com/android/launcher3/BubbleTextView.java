@@ -1117,11 +1117,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     private void updateIcon(Drawable newIcon) {
-        if (mLayoutHorizontal) {
-            setCompoundDrawablesRelative(newIcon, null, null, null);
-        } else {
-            setCompoundDrawables(null, newIcon, null, null);
-        }
+        // Minimalist inkOS-style: text-only items (no icon drawable)
+        setCompoundDrawables(null, null, null, null);
     }
 
     private String getAppLabelPluralString(String appName, int notificationCount) {

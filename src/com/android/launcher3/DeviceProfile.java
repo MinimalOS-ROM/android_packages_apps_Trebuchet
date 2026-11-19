@@ -338,8 +338,7 @@ public class DeviceProfile {
 
         numShownHotseatIcons =
                 isTwoPanels ? inv.numDatabaseHotseatIcons : inv.numShownHotseatIcons;
-        numShownAllAppsColumns =
-                isTwoPanels ? inv.numDatabaseAllAppsColumns : inv.numAllAppsColumns;
+        numShownAllAppsColumns = 1;
         hotseatBarSizeExtraSpacePx = 0;
         hotseatBarTopPaddingPx =
                 res.getDimensionPixelSize(R.dimen.dynamic_grid_hotseat_top_padding);
@@ -484,16 +483,9 @@ public class DeviceProfile {
     }
 
     private void updateHotseatIconSize(int hotseatIconSizePx) {
-        // Ensure there is enough space for folder icons, which have a slightly larger radius.
-        hotseatCellHeightPx = (int) Math.ceil(hotseatIconSizePx * ICON_OVERLAP_FACTOR);
-        if (isVerticalBarLayout()) {
-            hotseatBarSizePx = hotseatIconSizePx + hotseatBarSidePaddingStartPx
-                    + hotseatBarSidePaddingEndPx;
-        } else {
-            hotseatBarSizePx = hotseatIconSizePx + hotseatBarTopPaddingPx
-                    + hotseatBarBottomPaddingPx + (isScalableGrid ? 0 : hotseatExtraVerticalSize)
-                    + hotseatBarSizeExtraSpacePx;
-        }
+        // Minimalist inkOS-style layout: disable hotseat space
+        hotseatCellHeightPx = 0;
+        hotseatBarSizePx = 0;
     }
 
     private Point getCellLayoutBorderSpace(InvariantDeviceProfile idp) {
