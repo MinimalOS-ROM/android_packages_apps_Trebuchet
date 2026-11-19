@@ -93,6 +93,22 @@
             android:layout_gravity="bottom|center_horizontal"
             android:theme="@style/HomeScreenElementTheme" />
 
+        <TextView
+            android:id="@+id/minimal_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="16dp"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="#AAFFFFFF"
+            android:singleLine="false"
+            android:maxLines="3"
+            android:lineSpacingExtra="4dp"
+            android:importantForAccessibility="no" />
+
         <include
             android:id="@+id/drop_target_bar"
             layout="@layout/drop_target_bar" />

@@ -994,6 +994,29 @@ public class Launcher extends StatefulActivity<LauncherState> implements Launche
 
         // Temporary workaround for apps using SHOW_FORCED IME flag.
         hideKeyboard();
+        updateMinimalFooter();
+    }
+
+    private void updateMinimalFooter() {
+        android.widget.TextView footer = findViewById(R.id.minimal_footer);
+        if (footer == null) return;
+        StringBuilder sb = new StringBuilder();
+        android.os.BatteryManager bm = getSystemService(android.os.BatteryManager.class);
+        int pct = bm != null ? bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) : -1;
+        sb.append("Battery : ").append(pct >= 0 ? pct + "%" : "--");
+
+        NotificationListener nl = NotificationListener.getInstanceIfConnected();
+        int notifCount = nl != null ? nl.getActiveNotifications().length : 0;
+        sb.append("\nNotifications : ").append(notifCount);
+
+        android.app.AlarmManager am = getSystemService(android.app.AlarmManager.class);
+        String alarmStr = "None";
+        if (am != null && am.getNextAlarmClock() != null) {
+            alarmStr = android.text.format.DateFormat.getTimeFormat(this)
+                    .format(new java.util.Date(am.getNextAlarmClock().getTriggerTime()));
+        }
+        sb.append("\nAlarm : ").append(alarmStr);
+        footer.setText(sb.toString());
     }
 
     private void logStopAndResume(boolean isResume) {

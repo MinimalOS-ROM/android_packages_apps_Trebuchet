@@ -283,6 +283,8 @@ public class DepthController implements StateHandler<LauncherState>,
     }
 
     private void setDepth(float depth) {
+        // Minimalist inkOS-style: disable wallpaper depth/blur
+        if (true) return;
         depth = Utilities.boundToRange(depth, 0, 1);
         // Round out the depth to dedupe frequent, non-perceptable updates
         int depthI = (int) (depth * 256);

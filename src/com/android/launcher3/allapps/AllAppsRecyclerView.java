@@ -462,6 +462,52 @@ public class AllAppsRecyclerView extends BaseRecyclerView {
     }
 
     @Override
+    protected boolean onRequestFocusInDescendants(int direction, android.graphics.Rect previouslyFocusedRect) {
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            if (child != null && child.isFocusable() && child.requestFocus(direction, previouslyFocusedRect)) {
+                return true;
+            }
+        }
+        return super.onRequestFocusInDescendants(direction, previouslyFocusedRect);
+    }
+
+    @Override
+    public View focusSearch(View focused, int direction) {
+        if (focused != null && (direction == View.FOCUS_DOWN || direction == View.FOCUS_UP)) {
+            View item = findContainingItemView(focused);
+            if (item != null) {
+                int pos = getChildAdapterPosition(item);
+                int count = getAdapter() != null ? getAdapter().getItemCount() : 0;
+                if (pos != NO_POSITION && count > 0) {
+                    int step = (direction == View.FOCUS_DOWN) ? 1 : -1;
+                    int next = pos + step;
+                    while (next >= 0 && next < count) {
+                        ViewHolder vh = findViewHolderForAdapterPosition(next);
+                        if (vh != null && vh.itemView.isFocusable()) {
+                            scrollToPosition(next);
+                            return vh.itemView;
+                        } else if (vh == null) {
+                            scrollToPosition(next);
+                            final int targetPos = next;
+                            post(() -> {
+                                ViewHolder targetVh = findViewHolderForAdapterPosition(targetPos);
+                                if (targetVh != null && targetVh.itemView.isFocusable()) {
+                                    targetVh.itemView.requestFocus();
+                                }
+                            });
+                            return focused;
+                        }
+                        next += step;
+                    }
+                    return focused;
+                }
+            }
+        }
+        return super.focusSearch(focused, direction);
+    }
+
+    @Override
     public boolean hasOverlappingRendering() {
         return false;
     }

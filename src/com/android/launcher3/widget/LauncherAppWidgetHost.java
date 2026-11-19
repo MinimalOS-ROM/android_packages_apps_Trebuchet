@@ -104,9 +104,8 @@ public class LauncherAppWidgetHost extends AppWidgetHost {
 
     @Override
     public void startListening() {
-        if (WidgetsModel.GO_DISABLE_WIDGETS) {
-            return;
-        }
+        // Minimalist inkOS-style: disable AppWidgetHost listening to save RAM
+        if (true) return;
         mFlags |= FLAG_LISTENING;
         try {
             super.startListening();

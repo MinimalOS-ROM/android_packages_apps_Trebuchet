@@ -218,6 +218,8 @@ public class TaskbarManager implements DisplayController.DisplayInfoChangeListen
     }
 
     private void recreateTaskbar() {
+        // Minimalist inkOS-style: disable Taskbar on phone
+        if (true) return;
         destroyExistingTaskbar();
 
         DeviceProfile dp =

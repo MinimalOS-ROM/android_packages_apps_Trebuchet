@@ -326,6 +326,19 @@ public class AllAppsContainerView extends SpringRelativeLayout implements DragSo
         return LayoutInflater.from(getContext());
     }
 
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (changedView == this && visibility == VISIBLE) {
+            post(() -> {
+                AllAppsRecyclerView rv = getActiveRecyclerView();
+                if (rv != null) {
+                    rv.requestFocus();
+                }
+            });
+        }
+    }
+
     /**
      * Resets the state of AllApps.
      */
